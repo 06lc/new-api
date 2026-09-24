@@ -240,6 +240,80 @@ docker compose logs -f new-api
 
 后端使用 Go 和 Gin；控制台使用 React 19、TypeScript、Rsbuild、TanStack 与 Tailwind CSS 4。前端依赖和脚本使用 Bun；Go 语言基线见 [go.mod](./go.mod)，容器构建工具链见 [Dockerfile](./Dockerfile)。
 
+### Fork 开发与跟踪上游
+
+如果你从原项目 Fork 到自己的 GitHub 仓库，建议保留两个远程仓库：`origin` 指向自己的 Fork，`upstream` 指向原项目。`main` 只用于同步上游，日常开发使用 `develop` 或从它创建的功能分支。
+
+先配置远程仓库并获取完整提交历史：
+
+```bash
+# origin 指向自己的 Fork
+git remote set-url origin https://github.com/your-account/new-api.git
+
+# upstream 指向原项目；如果已经存在，则改用 git remote set-url upstream ...
+git remote add upstream https://github.com/QuantumNous/new-api.git
+
+git fetch --prune --all
+```
+
+如果这是通过 `git clone` 从自己的 Fork 克隆的正常仓库，快进同步 `main`，再创建开发分支：
+
+```bash
+git switch main
+git merge --ff-only upstream/main
+git push origin main
+
+git switch -c develop
+git push -u origin develop
+```
+
+如果当前目录是下载源码后形成的本地快照，而不是包含完整提交历史的正常克隆，必须先确认工作区干净。`git reset --hard` 会覆盖当前分支上的文件；若 `git status --short` 有任何输出，先提交或另行备份工作，不要继续：
+
+```bash
+git status --short
+git branch backup/workspace-snapshot main
+git reset --hard origin/main
+git merge --ff-only upstream/main
+git push origin main
+git branch --set-upstream-to=origin/main main
+
+git switch -c develop
+git push -u origin develop
+```
+
+完成任一条初始化路径后，设置本仓库的 Git 默认行为：
+
+```bash
+git config --local remote.origin.prune true
+git config --local remote.upstream.prune true
+git config --local pull.ff only
+```
+
+日常开发时在 `develop` 或功能分支上修改、提交和推送：
+
+```bash
+git switch develop
+git add path/to/modified-file
+git commit -m "describe the change"
+git push -u origin develop  # 首次推送 develop 时执行；后续提交使用 git push
+```
+
+也可以从 `develop` 创建单独的功能分支；首次推送时使用 `git push -u origin my-feature`。
+
+跟踪上游更新时，先更新同步分支，再将更新合并到开发分支：
+
+```bash
+git switch main
+git fetch --prune upstream
+git merge --ff-only upstream/main
+git push origin main
+
+git switch develop
+git merge main
+```
+
+如果 `git merge --ff-only upstream/main` 报告无法快进，说明 Fork 或本地 `main` 已有额外提交。先检查 `git log --oneline --graph --decorate --all`，不要直接强制推送 `main`。
+
 后端会嵌入 `web/dist`，首次启动前先构建前端：
 
 ```bash

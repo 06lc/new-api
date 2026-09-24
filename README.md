@@ -240,6 +240,80 @@ Pin an image version from [Releases](https://github.com/QuantumNous/new-api/rele
 
 The backend uses Go and Gin. The web console uses React 19, TypeScript, Rsbuild, TanStack, and Tailwind CSS 4. Use Bun for frontend dependencies and scripts; see [go.mod](./go.mod) for the Go language baseline and [Dockerfile](./Dockerfile) for the container build toolchain.
 
+### Fork development and upstream tracking
+
+When you fork the project to your own GitHub repository, keep two remotes: `origin` points to your fork and `upstream` points to the original project. Use `main` only for synchronizing upstream changes; do daily work on `develop` or on feature branches created from it.
+
+Configure the remotes and fetch the full commit history first:
+
+```bash
+# Point origin to your fork
+git remote set-url origin https://github.com/your-account/new-api.git
+
+# Point upstream to the original project; if it already exists, use git remote set-url upstream ... instead
+git remote add upstream https://github.com/QuantumNous/new-api.git
+
+git fetch --prune --all
+```
+
+If this is a normal clone made with `git clone` from your fork, fast-forward `main` and create your development branch:
+
+```bash
+git switch main
+git merge --ff-only upstream/main
+git push origin main
+
+git switch -c develop
+git push -u origin develop
+```
+
+If the current directory came from a source download and contains a local snapshot instead of a normal clone with the full commit history, first confirm that the worktree is clean. `git reset --hard` overwrites files on the current branch; if `git status --short` prints anything, commit or back up that work elsewhere before continuing:
+
+```bash
+git status --short
+git branch backup/workspace-snapshot main
+git reset --hard origin/main
+git merge --ff-only upstream/main
+git push origin main
+git branch --set-upstream-to=origin/main main
+
+git switch -c develop
+git push -u origin develop
+```
+
+After either setup path, configure Git defaults for this repository:
+
+```bash
+git config --local remote.origin.prune true
+git config --local remote.upstream.prune true
+git config --local pull.ff only
+```
+
+Do daily work on `develop` or a feature branch:
+
+```bash
+git switch develop
+git add path/to/modified-file
+git commit -m "describe the change"
+git push -u origin develop  # Run once for the first push of develop; use git push for later commits
+```
+
+You can also create feature branches from `develop`; on the first push, use `git push -u origin my-feature`.
+
+To track upstream changes, update the synchronization branch first, then merge it into your development branch:
+
+```bash
+git switch main
+git fetch --prune upstream
+git merge --ff-only upstream/main
+git push origin main
+
+git switch develop
+git merge main
+```
+
+If `git merge --ff-only upstream/main` cannot fast-forward, your fork or local `main` has additional commits. Inspect `git log --oneline --graph --decorate --all` before proceeding, and do not force-push `main`.
+
 Build the frontend before starting the backend, which embeds `web/dist`:
 
 ```bash
