@@ -194,8 +194,8 @@ export function getReasoningEffortVariant(
 export function getTimeColor(
   seconds: number
 ): 'success' | 'warning' | 'danger' {
-  if (seconds < 10) return 'success'
-  if (seconds < 30) return 'warning'
+  if (seconds < 40) return 'success'
+  if (seconds < 90) return 'warning'
   return 'danger'
 }
 
@@ -205,8 +205,8 @@ export function getTimeColor(
 export function getFirstResponseTimeColor(
   seconds: number
 ): 'success' | 'warning' | 'danger' {
-  if (seconds < 5) return 'success'
-  if (seconds < 10) return 'warning'
+  if (seconds < 20) return 'success'
+  if (seconds < 60) return 'warning'
   return 'danger'
 }
 
