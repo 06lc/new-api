@@ -22,7 +22,6 @@ import { useTranslation } from 'react-i18next'
 import {
   formatLatency,
   formatThroughput,
-  getSuccessRateDotClass,
 } from '@/features/performance-metrics/lib/format'
 import type { SuccessRatePoint } from '@/features/performance-metrics/types'
 import { cn } from '@/lib/utils'
@@ -41,6 +40,13 @@ export interface ModelPerfBadgeProps extends React.HTMLAttributes<HTMLDivElement
 }
 
 const STATUS_SLOTS = Array.from({ length: 24 }, (_, slot) => slot)
+
+function getHourlySuccessRateDotClass(rate: number): string {
+  if (rate > 80) return 'bg-emerald-500'
+  if (rate >= 60) return 'bg-emerald-400'
+  if (rate >= 40) return 'bg-amber-500'
+  return 'bg-red-500'
+}
 
 export const ModelPerfBadge = memo(function ModelPerfBadge(
   props: ModelPerfBadgeProps
@@ -115,7 +121,7 @@ export const ModelPerfBadge = memo(function ModelPerfBadge(
                       Number.isFinite(rate) &&
                       rate >= 0 &&
                       rate <= 100
-                      ? getSuccessRateDotClass(rate)
+                      ? getHourlySuccessRateDotClass(rate)
                       : 'bg-muted-foreground/15'
                   )}
                 />

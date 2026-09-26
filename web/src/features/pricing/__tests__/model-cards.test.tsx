@@ -183,6 +183,39 @@ describe('model cards', () => {
     expect(statusStrip).not.toHaveClass('justify-between')
   })
 
+  it.each([
+    { successRate: 80.01, expectedClass: 'bg-emerald-500' },
+    { successRate: 80, expectedClass: 'bg-emerald-400' },
+    { successRate: 60, expectedClass: 'bg-emerald-400' },
+    { successRate: 40, expectedClass: 'bg-amber-500' },
+    { successRate: 39.99, expectedClass: 'bg-red-500' },
+  ])(
+    'colors an hourly status bar for $successRate% success',
+    ({ successRate, expectedClass }) => {
+      const windowStart = Math.floor(Date.now() / 3600_000) * 3600
+      render(
+        <ModelCard
+          model={pricingModel()}
+          onClick={vi.fn()}
+          perf={{
+            window_start: windowStart,
+            avg_latency_ms: 1200,
+            avg_tps: 42,
+            success_rate: successRate,
+            recent_success_series: [
+              { ts: windowStart, success_rate: successRate },
+            ],
+          }}
+        />
+      )
+
+      const statusStrip = screen.getByRole('img', {
+        name: 'Recent success-rate samples; gray bars indicate missing data.',
+      })
+      expect(statusStrip.children[0]).toHaveClass(expectedClass)
+    }
+  )
+
   it('keeps group, endpoint and tag overflow counts with their own metadata', () => {
     const groups = ['default-with-a-long-group-name', 'premium', 'internal']
     const endpoints = ['openai-response', 'openai', 'claude', 'gemini', 'jina']
